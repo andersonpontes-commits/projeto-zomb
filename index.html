@@ -1,0 +1,888 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pz-bg: #0d0d0b;
+    --pz-panel: #131310;
+    --pz-panel2: #1a1a16;
+    --pz-border: #3a3a2a;
+    --pz-border2: #4a4a30;
+    --pz-green: #7ab648;
+    --pz-green2: #5a8e32;
+    --pz-red: #cc3322;
+    --pz-red2: #aa2211;
+    --pz-gold: #c8a84b;
+    --pz-gold2: #a08030;
+    --pz-text: #c8c4a8;
+    --pz-text2: #7a7860;
+    --pz-ok: #5a9e3a;
+    --pz-warn: #d4822a;
+    --pz-title: #e8d88a;
+    --pz-scanline: rgba(0,0,0,0.18);
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-title: 'VT323', monospace;
+  }
+
+  #pz-root {
+    background: var(--pz-bg);
+    font-family: var(--font-mono);
+    color: var(--pz-text);
+    min-height: 100vh;
+    padding: 0;
+    position: relative;
+  }
+
+  .scanlines {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      var(--pz-scanline) 3px,
+      var(--pz-scanline) 4px
+    );
+    opacity: 0.35;
+  }
+
+  .pz-header {
+    background: var(--pz-panel);
+    border-bottom: 2px solid var(--pz-border2);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pz-logo {
+    font-family: var(--font-title);
+    font-size: 28px;
+    color: var(--pz-title);
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(200,168,75,0.4);
+  }
+
+  .pz-logo span { color: var(--pz-red); }
+
+  .pz-status {
+    font-size: 11px;
+    color: var(--pz-green);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .blink {
+    animation: blink 1.2s step-start infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .pz-main {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+    height: calc(100vh - 54px);
+    overflow: hidden;
+  }
+
+  .pz-sidebar {
+    background: var(--pz-panel);
+    border-right: 1px solid var(--pz-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .pz-content {
+    background: var(--pz-bg);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-title {
+    font-family: var(--font-title);
+    font-size: 18px;
+    color: var(--pz-gold);
+    letter-spacing: 1px;
+    padding: 10px 14px 6px;
+    border-bottom: 1px solid var(--pz-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title i { font-size: 16px; }
+
+  .points-display {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--pz-border);
+  }
+
+  .pts-label {
+    font-size: 10px;
+    color: var(--pz-text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .pts-value {
+    font-family: var(--font-title);
+    font-size: 48px;
+    line-height: 1;
+    color: var(--pz-green);
+    text-shadow: 0 0 12px rgba(122,182,72,0.5);
+    transition: color 0.2s, text-shadow 0.2s;
+  }
+
+  .pts-value.negative {
+    color: var(--pz-red);
+    text-shadow: 0 0 12px rgba(204,51,34,0.5);
+  }
+
+  .pts-value.zero {
+    color: var(--pz-gold);
+    text-shadow: 0 0 12px rgba(200,168,75,0.5);
+  }
+
+  .pts-bar-wrap {
+    margin-top: 8px;
+    height: 6px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--pz-border);
+  }
+
+  .pts-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s, background 0.2s;
+    background: var(--pz-green);
+  }
+
+  .breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--pz-border);
+    font-size: 11px;
+  }
+
+  .bk-row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--pz-text2);
+  }
+
+  .bk-row span:last-child { color: var(--pz-text); font-weight: 500; }
+
+  .bk-row.red span:last-child { color: var(--pz-red); }
+  .bk-row.green span:last-child { color: var(--pz-green); }
+  .bk-row.total { border-top: 1px solid var(--pz-border); margin-top: 4px; padding-top: 5px; }
+  .bk-row.total span { color: var(--pz-gold) !important; font-family: var(--font-title); font-size: 13px; }
+
+  .start-btn {
+    margin: 10px 14px;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--pz-green2);
+    color: var(--pz-green);
+    font-family: var(--font-title);
+    font-size: 18px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    width: calc(100% - 28px);
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-btn:hover { background: rgba(122,182,72,0.12); }
+  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .start-btn.ready {
+    border-color: var(--pz-green);
+    animation: pulseborder 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulseborder {
+    0%,100% { box-shadow: 0 0 0 0 rgba(122,182,72,0); }
+    50% { box-shadow: 0 0 0 3px rgba(122,182,72,0.3); }
+  }
+
+  .reset-btn {
+    margin: 0 14px 12px;
+    padding: 7px;
+    background: transparent;
+    border: 1px solid var(--pz-border);
+    color: var(--pz-text2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    width: calc(100% - 28px);
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .reset-btn:hover { border-color: var(--pz-red); color: var(--pz-red); }
+
+  .panel-block {
+    background: var(--pz-panel);
+    border: 1px solid var(--pz-border);
+    border-radius: 2px;
+  }
+
+  .panel-head {
+    font-family: var(--font-title);
+    font-size: 16px;
+    color: var(--pz-gold);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--pz-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 1px;
+  }
+
+  .panel-head i { font-size: 15px; }
+
+  .prof-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .prof-card {
+    border: 1px solid var(--pz-border);
+    padding: 9px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--pz-panel2);
+    position: relative;
+  }
+
+  .prof-card:hover { border-color: var(--pz-gold2); background: #1e1e18; }
+  .prof-card.selected { border-color: var(--pz-gold); background: #201e10; }
+
+  .prof-card.selected::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--pz-gold);
+  }
+
+  .prof-name {
+    font-size: 12px;
+    color: var(--pz-text);
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
+
+  .prof-cost {
+    font-family: var(--font-title);
+    font-size: 16px;
+    color: var(--pz-red);
+  }
+
+  .prof-cost.zero { color: var(--pz-text2); }
+
+  .prof-skills {
+    font-size: 10px;
+    color: var(--pz-text2);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .traits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .traits-col {
+    padding: 10px;
+    border-right: 1px solid var(--pz-border);
+  }
+
+  .traits-col:last-child { border-right: none; }
+
+  .col-title {
+    font-size: 10px;
+    color: var(--pz-text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .trait-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 7px;
+    margin-bottom: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color 0.12s, background 0.12s;
+    border-radius: 1px;
+  }
+
+  .trait-item:hover { background: var(--pz-panel2); border-color: var(--pz-border); }
+
+  .trait-item.selected {
+    background: var(--pz-panel2);
+    border-color: var(--pz-border2);
+  }
+
+  .trait-item.selected.pos { border-left: 2px solid var(--pz-green); }
+  .trait-item.selected.neg { border-left: 2px solid var(--pz-red); }
+
+  .trait-check {
+    width: 14px; height: 14px;
+    border: 1px solid var(--pz-border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    color: transparent;
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+  }
+
+  .selected .trait-check.pos { background: rgba(122,182,72,0.15); border-color: var(--pz-green); color: var(--pz-green); }
+  .selected .trait-check.neg { background: rgba(204,51,34,0.15); border-color: var(--pz-red); color: var(--pz-red); }
+
+  .trait-name {
+    font-size: 11px;
+    color: var(--pz-text);
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  .trait-pts {
+    font-family: var(--font-title);
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .trait-pts.pos { color: var(--pz-red); }
+  .trait-pts.neg { color: var(--pz-green); }
+
+  .trait-tooltip {
+    font-size: 10px;
+    color: var(--pz-text2);
+    padding: 0 7px 5px 29px;
+    line-height: 1.4;
+    display: none;
+  }
+
+  .selected .trait-tooltip { display: block; }
+
+  .skills-badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    border: 1px solid var(--pz-border2);
+    color: var(--pz-text2);
+    margin: 1px 2px;
+    letter-spacing: 0.5px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--pz-panel);
+    border: 1px solid var(--pz-green2);
+    color: var(--pz-green);
+    font-family: var(--font-title);
+    font-size: 18px;
+    padding: 10px 24px;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    letter-spacing: 2px;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--pz-border);
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 3px 9px;
+    background: transparent;
+    border: 1px solid var(--pz-border);
+    color: var(--pz-text2);
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-btn:hover, .filter-btn.active { border-color: var(--pz-gold2); color: var(--pz-gold); background: rgba(200,168,75,0.06); }
+
+  .search-input {
+    background: transparent;
+    border: 1px solid var(--pz-border);
+    color: var(--pz-text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    outline: none;
+    width: 160px;
+    margin-left: auto;
+  }
+
+  .search-input:focus { border-color: var(--pz-gold2); }
+
+  .search-input::placeholder { color: var(--pz-text2); }
+
+  .alert-banner {
+    font-size: 11px;
+    padding: 7px 12px;
+    border-left: 3px solid;
+    margin: 0 0 4px;
+    display: none;
+  }
+
+  .alert-banner.warn { border-color: var(--pz-warn); color: var(--pz-warn); background: rgba(212,130,42,0.07); display: block; }
+  .alert-banner.ok { border-color: var(--pz-ok); color: var(--pz-ok); background: rgba(90,158,58,0.07); display: block; }
+  .alert-banner.err { border-color: var(--pz-red); color: var(--pz-red); background: rgba(204,51,34,0.07); display: block; }
+
+  .tag-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--pz-border);
+    min-height: 34px;
+    align-items: center;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: opacity 0.1s;
+  }
+
+  .tag:hover { opacity: 0.7; }
+  .tag.pos { border-color: var(--pz-red); color: var(--pz-red); }
+  .tag.neg { border-color: var(--pz-green); color: var(--pz-green); }
+  .tag i { font-size: 10px; }
+</style>
+
+<div id="pz-root">
+  <div class="scanlines"></div>
+
+  <div class="pz-header">
+    <div class="pz-logo">PROJECT <span>ZOMBOID</span> — CRIAÇÃO DE PERSONAGEM</div>
+    <div class="pz-status">
+      <span class="blink">■</span>
+      <span id="status-text">AGUARDANDO SELEÇÃO</span>
+    </div>
+  </div>
+
+  <div class="pz-main">
+    <div class="pz-sidebar">
+      <div class="section-title"><i class="ti ti-user" aria-hidden="true"></i> PONTOS DISPONÍVEIS</div>
+
+      <div class="points-display">
+        <div class="pts-label">Saldo atual</div>
+        <div class="pts-value zero" id="pts-display">0</div>
+        <div class="pts-bar-wrap">
+          <div class="pts-bar" id="pts-bar" style="width:50%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--pz-text2);margin-top:4px;" id="pts-hint">Escolha uma profissão para começar</div>
+      </div>
+
+      <div class="breakdown">
+        <div class="bk-row"><span>Profissão</span><span id="bk-prof">0 pts</span></div>
+        <div class="bk-row green"><span>Desvantagens</span><span id="bk-neg">+0 pts</span></div>
+        <div class="bk-row red"><span>Vantagens</span><span id="bk-pos">–0 pts</span></div>
+        <div class="bk-row total"><span>TOTAL</span><span id="bk-total">= 0</span></div>
+      </div>
+
+      <div style="padding:8px 14px 4px;">
+        <div id="alert-box" class="alert-banner"></div>
+      </div>
+
+      <div id="tags-wrap" class="tag-selected" style="display:none;">
+        <div id="tags-inner"></div>
+      </div>
+
+      <div style="margin-top:auto;">
+        <button class="start-btn" id="start-btn" disabled onclick="onStart()">
+          ► SOBREVIVER
+        </button>
+        <button class="reset-btn" onclick="resetAll()">
+          <i class="ti ti-refresh" aria-hidden="true"></i> REINICIAR SELEÇÃO
+        </button>
+      </div>
+    </div>
+
+    <div class="pz-content" id="main-content">
+
+      <div class="panel-block" id="panel-prof">
+        <div class="panel-head"><i class="ti ti-briefcase" aria-hidden="true"></i> PROFISSÃO</div>
+        <div class="filter-row">
+          <button class="filter-btn active" data-fcat="prof" data-val="all" onclick="setFilter('prof',this,'all')">Todas</button>
+          <button class="filter-btn" data-fcat="prof" data-val="0" onclick="setFilter('prof',this,'0')">Grátis</button>
+          <button class="filter-btn" data-fcat="prof" data-val="-2" onclick="setFilter('prof',this,'-2')">–2 pts</button>
+          <button class="filter-btn" data-fcat="prof" data-val="-4" onclick="setFilter('prof',this,'-4')">–4 pts</button>
+          <button class="filter-btn" data-fcat="prof" data-val="-6" onclick="setFilter('prof',this,'-6')">–6+ pts</button>
+          <input class="search-input" id="prof-search" placeholder="Buscar profissão..." oninput="renderProfs()">
+        </div>
+        <div class="prof-grid" id="prof-grid"></div>
+      </div>
+
+      <div class="panel-block" id="panel-traits">
+        <div class="panel-head"><i class="ti ti-list-check" aria-hidden="true"></i> VANTAGENS E DESVANTAGENS</div>
+        <div class="filter-row">
+          <button class="filter-btn active" data-fcat="trait" data-val="all" onclick="setFilter('trait',this,'all')">Todas</button>
+          <button class="filter-btn" data-fcat="trait" data-val="pos" onclick="setFilter('trait',this,'pos')">Vantagens</button>
+          <button class="filter-btn" data-fcat="trait" data-val="neg" onclick="setFilter('trait',this,'neg')">Desvantagens</button>
+          <input class="search-input" id="trait-search" placeholder="Buscar trait..." oninput="renderTraits()">
+        </div>
+        <div class="traits-grid" id="traits-grid">
+          <div class="traits-col" id="col-pos">
+            <div class="col-title"><i class="ti ti-plus" style="color:var(--pz-red)"></i> VANTAGENS (custam pontos)</div>
+          </div>
+          <div class="traits-col" id="col-neg">
+            <div class="col-title"><i class="ti ti-minus" style="color:var(--pz-green)"></i> DESVANTAGENS (geram pontos)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const PROFESSIONS = [
+  {id:'unemployed',name:'Desempregado',cost:0,skills:['Nenhuma habilidade extra'],desc:'Máxima liberdade de build'},
+  {id:'firefighter',name:'Bombeiro',cost:-4,skills:['Machado bombeiro','Agilidade Lv.3','Força Lv.2','P.Socorros Lv.1'],desc:'Excelente para combate corpo a corpo'},
+  {id:'radio',name:'Operador de Rádio',cost:-2,skills:['Eletrônicos Lv.2','Rádio Lv.2'],desc:'Comunicação e eletrônicos'},
+  {id:'mechanic',name:'Mecânico',cost:-4,skills:['Mecânica Lv.3','Eletrônicos Lv.1'],desc:'Conserta e pilota veículos melhor'},
+  {id:'nurse',name:'Enfermeiro',cost:-4,skills:['P.Socorros Lv.3','Medicina Lv.1'],desc:'Cura ferimentos com alta eficiência'},
+  {id:'cook',name:'Cozinheiro',cost:-2,skills:['Culinária Lv.3'],desc:'Cria alimentos com mais valor'},
+  {id:'carpenter',name:'Carpinteiro',cost:-4,skills:['Carpintaria Lv.3','Serragem Lv.2'],desc:'Constrói e fortifica estruturas'},
+  {id:'police',name:'Policial',cost:-4,skills:['Pistola Lv.3','Recarga Lv.2','Agilidade Lv.1'],desc:'Especialista em armas de fogo'},
+  {id:'security',name:'Segurança',cost:-2,skills:['Combate Lv.1','Agilidade Lv.1'],desc:'Vigilância e segurança pessoal'},
+  {id:'farmer',name:'Fazendeiro',cost:-4,skills:['Cultivo Lv.3','Forrageamento Lv.2'],desc:'Planta e colhe alimentos'},
+  {id:'fisherman',name:'Pescador',cost:-4,skills:['Pesca Lv.3','Culinária Lv.1','Forrageamento Lv.1'],desc:'Pescaria como fonte de alimento'},
+  {id:'hunter',name:'Caçador',cost:-4,skills:['Rifle Lv.3','Pesca Lv.1','Forrageamento Lv.1'],desc:'Sobrevivência na natureza'},
+  {id:'gravedigger',name:'Coveiro',cost:-2,skills:['Pá acelerada','Furtividade Lv.1'],desc:'Movimenta terra com eficiência'},
+  {id:'trucker',name:'Motorista de Caminhão',cost:-2,skills:['Mecânica Lv.1','Solda Lv.1'],desc:'Habilidades automotivas básicas'},
+  {id:'teacher',name:'Professor',cost:-2,skills:['Aprendizado acelerado'],desc:'Aprende habilidades mais rápido'},
+  {id:'doctor',name:'Médico',cost:-8,skills:['P.Socorros Lv.5','Medicina Lv.2'],desc:'Máxima habilidade de cura'},
+  {id:'analyst',name:'Analista de Segurança',cost:-2,skills:['Furtividade Lv.1','Eletrônicos Lv.1'],desc:'Discreta e técnica'},
+  {id:'thief',name:'Ladrão',cost:-2,skills:['Furtividade Lv.2','Agilidade Lv.1'],desc:'Especialista em não ser visto'},
+  {id:'ranger',name:'Ranger / Parque-Estadual',cost:-4,skills:['Forrageamento Lv.3','Armadilha Lv.2','Furtividade Lv.1'],desc:'Sobrevivência em ambiente selvagem'},
+];
+
+const TRAITS = [
+  {id:'nimble',name:'Ágil',type:'pos',cost:-2,desc:'Velocidade de movimento aumentada'},
+  {id:'wakeful',name:'Alerta',type:'pos',cost:-2,desc:'Dorme menos; mais tempo acordado'},
+  {id:'keenhearing',name:'Audição Aguçada',type:'pos',cost:-2,desc:'Ouve zumbis de mais longe'},
+  {id:'eagleeyed',name:'Visão Aguçada',type:'pos',cost:-2,desc:'Campo de visão aumentado'},
+  {id:'desensitized',name:'Calmo',type:'pos',cost:-2,desc:'Pânico reduzido diante de zumbis'},
+  {id:'brave',name:'Corajoso',type:'pos',cost:-2,desc:'Bônus de moral e menos debuffs de medo'},
+  {id:'immuneresist',name:'Resistente a Doenças',type:'pos',cost:-2,desc:'Mais difícil de adoecer'},
+  {id:'fastlearner',name:'Adaptável',type:'pos',cost:-2,desc:'Aprende habilidades mais rápido'},
+  {id:'hardofsore',name:'Dentes Fortes',type:'pos',cost:-2,desc:'Lore: reduz chance de infecção viral'},
+  {id:'bloodcold',name:'Sangue Frio',type:'pos',cost:-2,desc:'Zumbis detectam você com mais dificuldade'},
+  {id:'fit',name:'Apto Fisicamente',type:'pos',cost:-4,desc:'Cansaço acumula mais lentamente'},
+  {id:'veryfit',name:'Atlético',type:'pos',cost:-6,desc:'Stamina e velocidade muito maiores'},
+  {id:'stouthearted',name:'Bravo',type:'pos',cost:-4,desc:'Pânico quase inexistente'},
+  {id:'fastfingers',name:'Dedos Rápidos',type:'pos',cost:-4,desc:'Recarrega armas muito mais rápido'},
+  {id:'ironstomach',name:'Estômago de Ferro',type:'pos',cost:-4,desc:'Resiste a alimentos estragados'},
+  {id:'strong',name:'Forte',type:'pos',cost:-6,desc:'Força muito alta; carrega mais peso'},
+  {id:'organized',name:'Organizador',type:'pos',cost:-4,desc:'Organiza inventário/contêineres mais rápido'},
+  {id:'fastrecovery',name:'Recuperação Rápida',type:'pos',cost:-4,desc:'Recupera stamina muito mais rápido'},
+  {id:'lightfoot',name:'Silencioso',type:'pos',cost:-4,desc:'Passos silenciosos; menos atração de zumbis'},
+  {id:'lucky',name:'Sortudo',type:'pos',cost:-4,desc:'Encontra itens raros com mais frequência'},
+  {id:'herbivore',name:'Herbívoro',type:'pos',cost:-4,desc:'Bônus em forrageamento de plantas comestíveis'},
+  {id:'toughguy',name:'Valentão',type:'pos',cost:-6,desc:'Dano corpo a corpo aumentado'},
+  {id:'mechintuit',name:'Mecânica Intuitiva',type:'pos',cost:-6,desc:'Conserta veículos e itens muito mais rápido'},
+  {id:'nofatigue',name:'Resistência à Fadiga',type:'pos',cost:-6,desc:'Quase não sente cansaço ao correr'},
+  {id:'shortsighted',name:'Míope',type:'neg',cost:2,desc:'Visão reduzida sem óculos (item encontrável)'},
+  {id:'coldres',name:'Sensível ao Frio',type:'neg',cost:2,desc:'Fica com frio mais rápido; penalidade de humor'},
+  {id:'emotional',name:'Emocional',type:'neg',cost:2,desc:'Humor piora mais facilmente'},
+  {id:'cowardly',name:'Covarde',type:'neg',cost:2,desc:'Pânico aumentado; moral mais frágil'},
+  {id:'lazy',name:'Preguiçoso',type:'neg',cost:2,desc:'Aprende algumas habilidades mais devagar'},
+  {id:'clumsy',name:'Desajeitado',type:'neg',cost:2,desc:'Mais ruído ao se mover; derruba itens'},
+  {id:'colorblind',name:'Daltônico',type:'neg',cost:2,desc:'Visual em escala de cinza (cosmético)'},
+  {id:'deaf',name:'Surdo',type:'neg',cost:2,desc:'Alcance de audição muito reduzido'},
+  {id:'anxious',name:'Ansioso',type:'neg',cost:4,desc:'Pânico frequente; humor instável'},
+  {id:'claustrophobia',name:'Claustrofóbico',type:'neg',cost:4,desc:'Humor cai em espaços fechados e escuros'},
+  {id:'slowfingers',name:'Dedos Tortos',type:'neg',cost:4,desc:'Recarga de armas muito mais lenta'},
+  {id:'weak',name:'Fraco',type:'neg',cost:4,desc:'Força baixa; carrega muito menos'},
+  {id:'slow',name:'Lento',type:'neg',cost:4,desc:'Velocidade de movimento reduzida'},
+  {id:'panicky',name:'Paniquento',type:'neg',cost:4,desc:'Entra em pânico grave ao ver zumbis'},
+  {id:'heatsensitive',name:'Sensível ao Calor',type:'neg',cost:4,desc:'Superaquece rapidamente; penalidade de stamina'},
+  {id:'obese',name:'Obeso',type:'neg',cost:6,desc:'Velocidade baixa e stamina baixa'},
+  {id:'underweight',name:'Magrelo',type:'neg',cost:4,desc:'Stamina e força muito reduzidas'},
+  {id:'acrophobia',name:'Acrofóbico',type:'neg',cost:6,desc:'Pânico em locais altos; penalidade de ação'},
+  {id:'hypochon',name:'Hipocondríaco',type:'neg',cost:6,desc:'Acredita estar doente com frequência'},
+  {id:'migraines',name:'Enxaquecas',type:'neg',cost:6,desc:'Dores periódicas que reduzem eficiência'},
+  {id:'smoker',name:'Vício em Cigarros',type:'neg',cost:4,desc:'Precisa fumar; humor cai sem cigarro'},
+  {id:'alcoholic',name:'Alcoólatra',type:'neg',cost:6,desc:'Precisa de álcool; abstinência causa debuffs graves'},
+  {id:'asthmatic',name:'Asmático',type:'neg',cost:6,desc:'Stamina se esgota muito mais rápido'},
+];
+
+let selectedProf = null;
+let selectedTraits = new Set();
+let profFilter = 'all';
+let traitFilter = 'all';
+
+function calcPoints() {
+  const profCost = selectedProf ? selectedProf.cost : 0;
+  let traitCost = 0;
+  for (const id of selectedTraits) {
+    const t = TRAITS.find(x => x.id === id);
+    if (t) traitCost += t.cost;
+  }
+  return { profCost, traitCost, total: profCost + traitCost };
+}
+
+function updateSidebar() {
+  const { profCost, traitCost, total } = calcPoints();
+  const el = document.getElementById('pts-display');
+  const bar = document.getElementById('pts-bar');
+  const hint = document.getElementById('pts-hint');
+  const alert = document.getElementById('alert-box');
+  const btn = document.getElementById('start-btn');
+  const status = document.getElementById('status-text');
+
+  el.textContent = (total > 0 ? '+' : '') + total;
+  el.className = 'pts-value ' + (total > 0 ? 'green' : total < 0 ? 'negative' : 'zero');
+
+  const pct = Math.min(100, Math.max(0, 50 + total * 6));
+  bar.style.width = pct + '%';
+  bar.style.background = total > 0 ? 'var(--pz-red)' : total < 0 ? 'var(--pz-red)' : 'var(--pz-green)';
+
+  document.getElementById('bk-prof').textContent = profCost + ' pts';
+  const negPts = Array.from(selectedTraits).reduce((s,id)=>{ const t=TRAITS.find(x=>x.id===id); return t&&t.type==='neg'?s+t.cost:s; },0);
+  const posPts = Array.from(selectedTraits).reduce((s,id)=>{ const t=TRAITS.find(x=>x.id===id); return t&&t.type==='pos'?s+t.cost:s; },0);
+  document.getElementById('bk-neg').textContent = '+' + negPts + ' pts';
+  document.getElementById('bk-pos').textContent = posPts + ' pts';
+  document.getElementById('bk-total').textContent = '= ' + total;
+
+  alert.className = 'alert-banner';
+  if (!selectedProf) {
+    hint.textContent = 'Escolha uma profissão para começar';
+    alert.textContent = '';
+    status.textContent = 'AGUARDANDO SELEÇÃO';
+    btn.disabled = true;
+    btn.className = 'start-btn';
+  } else if (total > 0) {
+    hint.textContent = 'Adicione mais vantagens ou reduza desvantagens';
+    alert.className = 'alert-banner err';
+    alert.textContent = '⚠ SALDO POSITIVO: adicione vantagens ou remova desvantagens para zerar.';
+    status.textContent = 'SALDO INVÁLIDO';
+    btn.disabled = true;
+    btn.className = 'start-btn';
+  } else if (total < 0) {
+    hint.textContent = 'Adicione mais desvantagens para compensar';
+    alert.className = 'alert-banner warn';
+    alert.textContent = '⚠ SALDO NEGATIVO: adicione desvantagens para zerar o saldo.';
+    status.textContent = 'SALDO NEGATIVO';
+    btn.disabled = true;
+    btn.className = 'start-btn';
+  } else {
+    hint.textContent = 'Saldo zerado! Pronto para sobreviver.';
+    alert.className = 'alert-banner ok';
+    alert.textContent = '✓ SALDO ZERADO — personagem válido!';
+    status.textContent = 'PRONTO PARA INICIAR';
+    btn.disabled = false;
+    btn.className = 'start-btn ready';
+  }
+
+  renderTags();
+}
+
+function renderTags() {
+  const wrap = document.getElementById('tags-wrap');
+  const inner = document.getElementById('tags-inner');
+  const items = [];
+  if (selectedProf) {
+    items.push(`<span class="tag pos" title="Clique para remover profissão" onclick="selectProf(PROFESSIONS.find(p=>p.id==='${selectedProf.id}'))"><i class="ti ti-briefcase" aria-hidden="true"></i>${selectedProf.name} (${selectedProf.cost})</span>`);
+  }
+  for (const id of selectedTraits) {
+    const t = TRAITS.find(x => x.id === id);
+    if (!t) continue;
+    const sign = t.type === 'neg' ? '+' : '';
+    items.push(`<span class="tag ${t.type}" onclick="toggleTrait('${t.id}')"><i class="ti ti-x" aria-hidden="true"></i>${t.name} (${sign}${t.cost})</span>`);
+  }
+  if (items.length > 0) {
+    wrap.style.display = 'flex';
+    inner.innerHTML = items.join('');
+  } else {
+    wrap.style.display = 'none';
+    inner.innerHTML = '';
+  }
+}
+
+function setFilter(cat, btn, val) {
+  if (cat === 'prof') {
+    profFilter = val;
+    document.querySelectorAll('[data-fcat="prof"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderProfs();
+  } else {
+    traitFilter = val;
+    document.querySelectorAll('[data-fcat="trait"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTraits();
+  }
+}
+
+function renderProfs() {
+  const q = (document.getElementById('prof-search').value || '').toLowerCase();
+  const grid = document.getElementById('prof-grid');
+  grid.innerHTML = '';
+  PROFESSIONS.filter(p => {
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    if (profFilter === 'all') return true;
+    if (profFilter === '0') return p.cost === 0;
+    if (profFilter === '-2') return p.cost === -2;
+    if (profFilter === '-4') return p.cost === -4;
+    if (profFilter === '-6') return p.cost <= -6;
+    return true;
+  }).forEach(p => {
+    const isSel = selectedProf && selectedProf.id === p.id;
+    const costStr = p.cost === 0 ? '0 pts' : p.cost + ' pts';
+    const skillHtml = p.skills.map(s => `<span class="skills-badge">${s}</span>`).join('');
+    const div = document.createElement('div');
+    div.className = 'prof-card' + (isSel ? ' selected' : '');
+    div.innerHTML = `<div class="prof-name">${p.name}</div><div class="prof-cost${p.cost===0?' zero':''}">${costStr}</div><div class="prof-skills">${skillHtml}</div>`;
+    div.onclick = () => selectProf(p);
+    grid.appendChild(div);
+  });
+}
+
+function selectProf(p) {
+  if (selectedProf && selectedProf.id === p.id) {
+    selectedProf = null;
+  } else {
+    selectedProf = p;
+  }
+  renderProfs();
+  updateSidebar();
+}
+
+function renderTraits() {
+  const q = (document.getElementById('trait-search').value || '').toLowerCase();
+  const colPos = document.getElementById('col-pos');
+  const colNeg = document.getElementById('col-neg');
+
+  colPos.innerHTML = `<div class="col-title"><i class="ti ti-plus" style="color:var(--pz-red)"></i> VANTAGENS (custam pontos)</div>`;
+  colNeg.innerHTML = `<div class="col-title"><i class="ti ti-minus" style="color:var(--pz-green)"></i> DESVANTAGENS (geram pontos)</div>`;
+
+  const showPos = traitFilter === 'all' || traitFilter === 'pos';
+  const showNeg = traitFilter === 'all' || traitFilter === 'neg';
+
+  const traitsGrid = document.getElementById('traits-grid');
+  if (traitFilter === 'pos') {
+    traitsGrid.style.gridTemplateColumns = '1fr';
+    colNeg.style.display = 'none';
+    colPos.style.display = '';
+  } else if (traitFilter === 'neg') {
+    traitsGrid.style.gridTemplateColumns = '1fr';
+    colPos.style.display = 'none';
+    colNeg.style.display = '';
+  } else {
+    traitsGrid.style.gridTemplateColumns = '1fr 1fr';
+    colPos.style.display = '';
+    colNeg.style.display = '';
+  }
+
+  TRAITS.filter(t => {
+    if (q && !t.name.toLowerCase().includes(q) && !t.desc.toLowerCase().includes(q)) return false;
+    if (traitFilter === 'pos' && t.type !== 'pos') return false;
+    if (traitFilter === 'neg' && t.type !== 'neg') return false;
+    return true;
+  }).forEach(t => {
+    const isSel = selectedTraits.has(t.id);
+    const sign = t.type === 'neg' ? '+' : '–';
+    const div = document.createElement('div');
+    div.innerHTML = `<div class="trait-item ${isSel?'selected':''} ${t.type}" onclick="toggleTrait('${t.id}')">
+      <div class="trait-check ${t.type}">${isSel ? (t.type==='pos'?'–':'+') : ''}</div>
+      <div class="trait-name">${t.name}</div>
+      <div class="trait-pts ${t.type}">${sign}${Math.abs(t.cost)}</div>
+    </div>
+    <div class="trait-tooltip">${t.desc}</div>`;
+    if (t.type === 'pos') colPos.appendChild(div);
+    else colNeg.appendChild(div);
+  });
+}
+
+function toggleTrait(id) {
+  if (selectedTraits.has(id)) selectedTraits.delete(id);
+  else selectedTraits.add(id);
+  renderTraits();
+  updateSidebar();
+}
+
+function resetAll() {
+  selectedProf = null;
+  selectedTraits.clear();
+  profFilter = 'all';
+  traitFilter = 'all';
+  document.querySelectorAll('[data-fcat="prof"]').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.querySelectorAll('[data-fcat="trait"]').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.getElementById('prof-search').value = '';
+  document.getElementById('trait-search').value = '';
+  renderProfs();
+  renderTraits();
+  updateSidebar();
+  showToast('SELEÇÃO REINICIADA');
+}
+
+function onStart() {
+  const prof = selectedProf ? selectedProf.name : '?';
+  const traits = Array.from(selectedTraits).map(id => TRAITS.find(t=>t.id===id)?.name).filter(Boolean).join(', ');
+  showToast('BOA SORTE, SOBREVIVENTE!');
+  setTimeout(() => {
+    sendPrompt(`Meu personagem está pronto! Profissão: ${prof}. Traits: ${traits || 'nenhum'}. Me dê dicas específicas de sobrevivência para essa build.`);
+  }, 800);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+renderProfs();
+renderTraits();
+updateSidebar();
+</script>
